@@ -29,17 +29,26 @@ Display.prototype.drawUnits = function() {
     var size = this.unitSize;
     this.ctx.fillStyle= "#0000ff";
     for(var i=0; i<this.targetSim.unitNum; i++) {
-        var x = this.targetSim.unit[i].x;
-        var y = this.targetSim.unit[i].y;
-        if (this.targetSim.unit[i].selected) {
+        var unit = this.targetSim.unit[i];
+        if (unit.selected) {
             this.ctx.fillStyle= "#ffffff";
-            this.ctx.fillRect(x-1,y-1,size+2,size+2);
-        } 
-        var faction = this.targetSim.unit[i].faction;
-        var colour = this.targetSim.faction[faction].colour;
+            this.ctx.fillRect(unit.x-1,unit.y-1,size+2,size+2);
+        }
+        if (unit.isAlive === false && unit.food <1 ) {
+           this.ctx.fillStyle= "#cfcfcf"; 
+        } else {
+        var colour = this.targetSim.faction[unit.faction].colour;
         this.ctx.fillStyle= colour;
+        }
         
-        this.ctx.fillRect(x,y,size,size);
+        this.ctx.fillRect(unit.x,unit.y,size,size);
+        
+        this.ctx.fillStyle= "#00ffff";
+        this.ctx.fillRect(unit.x,unit.y-5,this.targetSim.unit[i].health,1);
+        this.ctx.fillStyle= "#ffff00";
+        this.ctx.fillRect(unit.x,unit.y-5,this.targetSim.unit[i].food,1);
+        
+        
     }   
 };
 
