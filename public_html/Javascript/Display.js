@@ -112,11 +112,21 @@ Display.prototype.drawHighlight = function(x,y,size,colour) {
 
 
 Display.prototype.drawText = function() {
+    var string ="";
+    this.ctx.fillStyle="#0040bF";
+    this.ctx.fillRect(0,0,240,20);
+    this.ctx.fillStyle="#ffffff";
     if (!this.targetSim.running) {
-        this.ctx.fillStyle="#ffffff";
-	this.ctx.fillText("(P) aused",5,12);
+        
+	string+="(P) aused ";
     }
-} 
+    string +="Biomass: " + this.targetSim.totalBiomass+"     Units: (";
+    for (var f=1; f<this.targetSim.factionNum; f++) {
+        string += this.targetSim.faction[f].totalUnits +", ";
+    }
+    string +=")";
+    this.ctx.fillText(string,5,12);
+};
 
 Display.prototype.drawControl = function() {
     if (this.targetPlayer.mouseOver) {

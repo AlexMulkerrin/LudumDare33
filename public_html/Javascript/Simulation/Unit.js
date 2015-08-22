@@ -18,6 +18,7 @@ function Unit(faction) {
     this.maxEaten = 10;
     this.maxHealth = 10;
     this.health = 10;
+    this.foodWorth = 10;
     this.food = 0;
     this.eaten = 0;
     
@@ -121,7 +122,7 @@ Unit.prototype.die = function() {
     this.maxVel = 0;
     this.maxRange = 0;
     this.health = 0;
-    this.food = 10;
+    this.food = this.foodWorth;
     
     this.faction = 0;
     this.selected = false;

@@ -6,7 +6,10 @@
 function Simulation() {
     this.running = true;
     
-    this.map = new Terrain(50,50);
+    var width = Math.floor(window.innerWidth/16);
+    var height = Math.floor(window.innerHeight/16);
+    
+    this.map = new Terrain(width,height);
     this.map.generateMap();
     
     this.factionNum=10;
@@ -17,13 +20,14 @@ function Simulation() {
     this.faction[0].colour = "#9E8F6E";
     this.faction[0].secondColour = changeSaturation(this.faction[0].colour, 0.5);
     
-    this.unitNum=100;
+    this.unitNum=20;
     this.unit = [];
     for(var i=0; i<this.unitNum; i++) {
         var faction = random(this.factionNum-1)+1;
         this.unit[i] = new Unit(faction);
     }
-    this.selectedNum=0;
+    this.selectedNum = 0;
+    this.totalBiomass = 0;
 }
 // METHODS
 Simulation.prototype.update = function() {
@@ -37,10 +41,10 @@ Simulation.prototype.update = function() {
                     var closestFood = this.findClosestFood(i);
                     if (closestFood !== -1 ) {
                         if (unit.health < unit.maxHealth) {
-                        unit.health++;
+                        unit.health+=1;
                         this.unit[closestFood].food--;
                         } else {
-                            unit.eaten++;
+                            unit.eaten+=1;
                             this.unit[closestFood].food--;
                             if (unit.eaten >= unit.maxEaten) {
                                 this.createUnit(unit);
@@ -63,6 +67,7 @@ Simulation.prototype.update = function() {
             };
         }
     }
+    this.updateTotals();
 };
 Simulation.prototype.togglePause = function() {
     if (this.running) {
@@ -166,7 +171,19 @@ Simulation.prototype.findClosestFood = function(i) {
         }
     }
     if (foundID === -1) {
-        this.map.depleteFlora(this.unit[i].x,this.unit[i].y);
+        var checkFlora = this.map.depleteFlora(this.unit[i].x,this.unit[i].y);
+        if (checkFlora) {
+            // kludege alert!, Eating should be a method of the bug itself :P
+            if (this.unit[i].health < this.unit[i].maxHealth) {
+                        this.unit[i].health+=0.1;
+                        } else {
+                            this.unit[i].eaten+=0.1;
+                            if (this.unit[i].eaten >= this.unit[i].maxEaten) {
+                                this.createUnit(this.unit[i]);
+                                this.unit[i].eaten = 0;
+                            }
+                        }
+        }
     }
     return foundID;
 };
@@ -179,8 +196,29 @@ Simulation.prototype.createUnit = function(parent) {
     this.unit[i].y = parent.y;
     this.unit[i].setRandomCourse();
     this.unit[i].action = state.wander;
-    this.unit[i].selected = parent.selected;
+    if (parent.selected) {
+        this.unit[i].selected = true;
+        this.selectedNum++;
+    }
     this.unitNum++;
+    
+};
+
+Simulation.prototype.updateTotals = function() {
+    this.totalBiomass = 0;
+    for (var f=0; f<this.factionNum; f++) {
+        this.faction[f].totalUnits = 0;
+    }
+    for (var i=0; i<this.unitNum; i++) {
+        if (this.unit[i].isAlive) {
+            this.faction[this.unit[i].faction].totalUnits++;
+            this.totalBiomass += this.unit[i].foodWorth + this.unit[i].eaten;
+        } else {
+            this.totalBiomass += this.unit[i].food;
+        }
+    }
+    this.totalBiomass += this.map.totalFlora()*0.1;
+    this.totalBiomass = Math.floor(this.totalBiomass);
     
 };
 
@@ -188,6 +226,7 @@ Simulation.prototype.createUnit = function(parent) {
 function Faction() {
     this.colour = randomRGB();
     this.secondColour = changeSaturation(this.colour, 0.5);
+    this.totalUnits = 0;
 }
 
 

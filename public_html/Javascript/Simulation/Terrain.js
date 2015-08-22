@@ -3,7 +3,7 @@
  * 
  */
 // TERRAIN OBJECT CLASS
-function Terrain(height,width) {
+function Terrain(width,height) {
     this.width = width;
     this.height = height;
     this.tileSize = 16;
@@ -69,15 +69,28 @@ Terrain.prototype.calculateAdjacent = function(x,y) {
 };
 
 Terrain.prototype.depleteFlora = function(x,y) {
+    var found=false;
     var tileX= Math.floor(x/this.tileSize);
     var tileY= Math.floor(y/this.tileSize);
     if (tileX>=0 && tileX<this.width) {
             if (tileY>=0 && tileY<this.height) {
             if (this.tile[tileX][tileY].flora>0) {
                 this.tile[tileX][tileY].flora--;
+                found=true;
             }
         }
-    }     
+    }
+    return found;
+};
+
+Terrain.prototype.totalFlora = function() {
+    var total=0;
+    for (var i=0; i<this.width; i++) {
+            for (var j=0; j<this.height; j++) {
+                total += this.tile[i][j].flora;
+            }
+        }
+  return total  
 };
 
 
