@@ -1,24 +1,42 @@
-// Display object handles all canvas drawing events
+/* Display object handles all canvas drawing events for
+* player and simulation objects
+*/
 //OBJECT CLASS
-function Display(canvasName, simulation) {
+function Display(canvasName, simulation, player) {
     this.targetSim = simulation;
+    this.targetPlayer = player;
+    
     this.canvasName = canvasName;
     this.canvas = document.getElementById(canvasName);
+    this.canvas.width = window.innerWidth;
+    this.canvas.height = window.innerHeight;
     this.ctx = this.canvas.getContext("2d");
     this.red=0;
 }
 // METHODS
 Display.prototype.update = function() {
-    this.repaintMap();
+    this.drawMap();
+    this.drawUnits();
+    this.drawPlayer();
 };
-
-Display.prototype.repaintMap = function() {
-    var colour = RGB(this.red,100,100);
-    this.ctx.fillStyle=colour;
-    this.ctx.fillRect(0,0,100,100);
-    //this.red+=5;
-    //if (this.red>200) this.red=0;
+Display.prototype.drawMap = function() {
+    this.ctx.fillStyle = RGB(0,0,100);
+    this.ctx.fillRect(0,0,this.canvas.width,this.canvas.height);
 };
+Display.prototype.drawUnits = function() {
+    this.ctx.fillStyle= RGB(255,255,255);
+    for(var i=0; i<this.targetSim.unitNum; i++) {
+        var x = this.targetSim.unit[i].x;
+        var y = this.targetSim.unit[i].y;
+        this.ctx.fillRect(x,y,5,5);
+    }   
+};
+Display.prototype.drawPlayer = function() {
+    this.ctx.fillStyle= RGB(100,255,100);
+    var x = this.targetPlayer.mouseX;
+    var y = this.targetPlayer.mouseY;
+    this.ctx.fillRect(x-10,y-10,20,20);
+}
 // UTILITY FUNCTIONS
 function RGB(red,green,blue) {
     var colourString="#";
