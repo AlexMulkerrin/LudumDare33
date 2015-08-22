@@ -1,16 +1,21 @@
 /* Simulation object keeps track of all game object's state
  * and handles updating them.
 */
-var state = { stopped:0, idle:1, wander:2, going:3};
+
 // SIMULATION OBJECT CLASS
 function Simulation() {
     this.running = true;
     
-    this.factionNum=5;
+    this.map = new Terrain(50,50);
+    this.map.generateMap();
+    
+    this.factionNum=10;
     this.faction = [];
     for(var i=0; i<this.factionNum; i++) {
         this.faction[i] = new Faction();
     }
+    this.faction[0].colour = "#9E8F6E";
+    this.faction[0].secondColour = changeSaturation(this.faction[0].colour, 0.5);
     
     this.unitNum=100;
     this.unit = [];
@@ -160,6 +165,9 @@ Simulation.prototype.findClosestFood = function(i) {
             }  
         }
     }
+    if (foundID === -1) {
+        this.map.depleteFlora(this.unit[i].x,this.unit[i].y);
+    }
     return foundID;
 };
 
@@ -179,6 +187,7 @@ Simulation.prototype.createUnit = function(parent) {
 // FACTION OBJECT CLASS
 function Faction() {
     this.colour = randomRGB();
+    this.secondColour = changeSaturation(this.colour, 0.5);
 }
 
 

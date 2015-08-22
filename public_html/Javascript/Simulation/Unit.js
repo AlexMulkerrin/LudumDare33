@@ -1,11 +1,19 @@
+var state = { stopped:0, idle:1, wander:2, going:3};
 // UNIT OBJECT CLASS
 function Unit(faction) {
     this.isAlive = true;
+    
     this.x = Math.random()*window.innerWidth;
     this.y = Math.random()*window.innerHeight;
-    this.vx = 0;//Math.random()*10;//-5;
-    this.vy = 0;//Math.random()*10-5;
+    this.vx = 0;
+    this.vy = 0;
     this.maxVel = 10;
+    
+    this.radians = Math.random()*Math.PI*2;
+    this.animationCycle = random(10);
+    
+    this.size = 16;//random(30)+5;
+    
     this.maxRange = 50;
     this.maxEaten = 10;
     this.maxHealth = 10;
@@ -21,6 +29,8 @@ function Unit(faction) {
 }
 // METHODS
 Unit.prototype.update = function() {
+    this.animationCycle++;
+    if (this.animationCycle>10) this.animationCycle=0;
     this.movement();
 };
 
@@ -69,7 +79,7 @@ Unit.prototype.movement = function() {
             break;
             
     }
-}
+};
 
 Unit.prototype.setCourse = function() {
     var dx = this.targX - this.x;
@@ -80,6 +90,9 @@ Unit.prototype.setCourse = function() {
     if (dx<0) xComponent*=-1;
     this.vx = xComponent;
     this.vy = ratio*this.vx;
+    
+    this.radians = Math.atan(ratio)+Math.PI/2;
+    if (dx>0) this.radians += Math.PI;
 };
 
 Unit.prototype.setRandomCourse = function() {

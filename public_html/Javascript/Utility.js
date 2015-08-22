@@ -26,3 +26,23 @@ function randomRGB() {
     return colourString;
 }
 
+function changeSaturation(colour, ratio) {
+    var components = [];
+    components = colourComponents(colour);
+    for (var i=0; i<components.length; i++) {
+        components[i] = Math.floor(components[i]*ratio);
+        if (components[i]>255) components[1]=255;
+    }
+    return RGB(components[0],components[1],components[2]);
+}
+
+function colourComponents(colour) {
+    var components=[], string;
+    for (var i=0; i<3; i++) {
+        // "#rrggbb"
+        string = colour[1+i*2]+colour[2+i*2];
+        components[i]=parseInt(string,16);
+    }
+    return components;
+}
+

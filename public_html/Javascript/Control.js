@@ -16,7 +16,7 @@ function Control(canvasName, simulation) {
     var t = this;
     // MOUSE CONTROLS
     this.targetCanvas.onmouseenter = function() {t.mouseOver=true;};
-    this.targetCanvas.onmouseleave = function() {t.mouseOver=false;};
+    this.targetCanvas.onmouseleave = function() {t.mouseExits(event)};
     
     this.targetCanvas.onmousemove = function(event) {t.mouseUpdateCoords(event);};
     
@@ -46,6 +46,11 @@ Control.prototype.mouseUpdateCoords = function(event) {
         this.selection.right = this.mouseX;
         this.selection.bottom = this.mouseY;
     }
+};
+
+Control.prototype.mouseExits = function(event) {
+    this.mouseOver=false;
+    this.mouseReleased();
 };
 
 Control.prototype.mousePressed = function(event) {
