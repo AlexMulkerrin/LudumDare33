@@ -1,26 +1,30 @@
+/* Unit object shared by all objects on map, including bodies and inanimate 
+ * objects.
+ */
 var state = { stopped:0, idle:1, wander:2, going:3};
 // UNIT OBJECT CLASS
-function Unit(faction) {
+function Unit(x, y, type, faction) {
     this.isAlive = true;
     
-    this.x = Math.random()*window.innerWidth;
-    this.y = Math.random()*window.innerHeight;
+    this.x = x;
+    this.y = y;
     this.vx = 0;
     this.vy = 0;
-    this.maxVel = 10;
-    
     this.radians = Math.random()*Math.PI*2;
     this.animationCycle = random(10);
     
-    this.size = 16;//random(30)+5;
+    this.type = type;
+//    this.size = 16;//random(30)+5; handled by unit types now!
+//    this.maxVel = 10;
+//    this.maxRange = 50;
+//    this.maxEaten = 10;
+//    this.maxHealth = 10;
+//    this.foodWorth = 10;
     
-    this.maxRange = 50;
-    this.maxEaten = 10;
-    this.maxHealth = 10;
-    this.health = 10;
-    this.foodWorth = 10;
+    this.health = this.type.health;
     this.food = 0;
     this.eaten = 0;
+    this.cooldown = 0;
     
     this.faction = faction;
     this.selected = false;
@@ -32,6 +36,12 @@ function Unit(faction) {
 Unit.prototype.update = function() {
     this.animationCycle++;
     if (this.animationCycle>10) this.animationCycle=0;
+    if (this.cooldown>0) this.cooldown--;
+    this.eaten-=0.1; // always hungry
+    if (this.eaten<0) {
+        this.health--;
+        this.eaten=1;
+    } 
     this.movement();
 };
 
@@ -40,14 +50,14 @@ Unit.prototype.movement = function() {
         
         case state.going:
             if (this.isNearTarget()) {
-                //this.x=this.targX;
+                //this.x=this.targX; don't move to target exactly
                 //this.y=this.targY; so lazy and poorly trained! :P
                 this.action = state.wander;
             } else {
                 var hop = Math.random();
                 this.x+=this.vx*hop;
                 this.y+=this.vy*hop;
-                //if (this.x<0) this.x=window.innerWidth;
+                //if (this.x<0) this.x=window.innerWidth; no borders at screen edges anymore
                 //if (this.x>window.innerWidth) this.x=0;
                 //if (this.y<0) this.y=window.innerHeight;
                 //if (this.y>window.innerHeight) this.y=0;
@@ -62,7 +72,7 @@ Unit.prototype.movement = function() {
             } else {
                 this.x+=this.vx/2;
                 this.y+=this.vy/2;
-                //if (this.x<0) this.x=window.innerWidth;
+                //if (this.x<0) this.x=window.innerWidth;  no borders at screen edges anymore
                 //if (this.x>window.innerWidth) this.x=0;
                 //if (this.y<0) this.y=window.innerHeight;
                 //if (this.y>window.innerHeight) this.y=0;
@@ -87,42 +97,41 @@ Unit.prototype.setCourse = function() {
     if (dx === 0) dx = 0.0001;
     var dy = this.targY - this.y;
     var ratio = dy/dx;
-    var xComponent = Math.sqrt(Math.pow(this.maxVel,2)/(1+Math.pow(ratio,2)));
+    var xComponent = Math.sqrt(Math.pow(this.type.speed,2)/(1+Math.pow(ratio,2)));
     if (dx<0) xComponent*=-1;
+    
     this.vx = xComponent;
     this.vy = ratio*this.vx;
-    
     this.radians = Math.atan(ratio)+Math.PI/2;
     if (dx>0) this.radians += Math.PI;
 };
 
 Unit.prototype.setRandomCourse = function() {
-    this.targX = this.x + random(this.maxVel*8)-this.maxVel*4;
-    this.targY = this.y + random(this.maxVel*8)-this.maxVel*4;
+    this.targX = this.x + random(this.type.speed*8)-this.type.speed*4;
+    this.targY = this.y + random(this.type.speed*8)-this.type.speed*4;
+    
     if (this.targX<0) this.targX=0;
     if (this.targX>window.innerWidth) this.targX=window.innerWidth;
     if (this.targY<0) this.targY=0;
     if (this.targY>window.innerHeight) this.targY=window.innerHeight;
+    
     this.setCourse();
 };
 
 Unit.prototype.isNearTarget = function() {
     var dx = this.targX - this.x;
     var dy = this.targY - this.y;
-    if (dx*dx+dy*dy < this.maxVel*this.maxVel) return true;
+    if (dx*dx+dy*dy < this.type.speed*this.type.speed) return true;
     return false;
 };
 
 Unit.prototype.die = function() {
     this.isAlive = false;
-    //this.x = 0;
-    //this.y = 0;
     this.vx = 0;
     this.vy = 0;
-    this.maxVel = 0;
-    this.maxRange = 0;
+    
     this.health = 0;
-    this.food = this.foodWorth;
+    this.food = this.type.cost;
     
     this.faction = 0;
     this.selected = false;

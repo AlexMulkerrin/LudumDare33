@@ -26,13 +26,59 @@ Terrain.prototype.clearMap = function() {
     
 };
 Terrain.prototype.generateMap = function() {
-    var repetitions =2;
+    
     this.clearMap();
     for (var i=0; i<this.width; i++) {
         for (var j=0; j<this.height; j++) {
             this.tile[i][j].flora = random(3)+1;
         }
     }
+    
+    this.pruneEdges();
+    this.relaxFloraDistribution(2);
+ 
+};
+
+Terrain.prototype.pruneEdges = function() {
+    var edge=random(10);
+    for (var i=0; i<this.width; i++) {
+            edge +=random(3)-1;
+            if (edge<1) edge=1;
+            for (var j=0; j<edge; j++) {
+                this.tile[i][j].flora = 0;
+                this.tile[i][j].ground=false;
+            }        
+    }
+    edge=random(10);
+    for (var i=0; i<this.width; i++) {
+            edge +=random(3)-1;
+            if (edge<1) edge=1;
+            for (var j=0; j<edge; j++) {
+                this.tile[i][this.height-(j+1)].flora = 0;
+                this.tile[i][this.height-(j+1)].ground=false;
+            }        
+    }
+    edge=random(10);
+    for (var j=0; j<this.height; j++) {
+            edge +=random(3)-1;
+            if (edge<1) edge=1;
+            for (var i=0; i<edge; i++) {
+                this.tile[i][j].flora = 0;
+                this.tile[i][j].ground=false;
+            }        
+    }
+    edge=random(10);
+    for (var j=0; j<this.height; j++) {
+            edge +=random(3)-1;
+            if (edge<1) edge=1;
+            for (var i=0; i<edge; i++) {
+                this.tile[this.width-(i+1)][j].flora = 0;
+                this.tile[this.width-(i+1)][j].ground=false;
+            }        
+    }
+};
+
+Terrain.prototype.relaxFloraDistribution = function(repetitions) {
     for (var r=0; r<repetitions; r++) {
         for (var i=0; i<this.width; i++) {
             for (var j=0; j<this.height; j++) {
@@ -42,13 +88,13 @@ Terrain.prototype.generateMap = function() {
         for (var i=0; i<this.width; i++) {
             for (var j=0; j<this.height; j++) {
                 var average = Math.floor(this.tile[i][j].neighboursFlora/4);
+                if (average<1) average=1;
                 if (average > this.tile[i][j].flora) this.tile[i][j].flora++;
                 if (average > this.tile[i][j].flora) this.tile[i][j].flora--;
                 this.tile[i][j].maxFlora = this.tile[i][j].flora;
             }
         }
     }
-    
 };
 
 Terrain.prototype.calculateAdjacent = function(x,y) {
@@ -69,18 +115,32 @@ Terrain.prototype.calculateAdjacent = function(x,y) {
 };
 
 Terrain.prototype.depleteFlora = function(x,y) {
-    var found=false;
     var tileX= Math.floor(x/this.tileSize);
     var tileY= Math.floor(y/this.tileSize);
-    if (tileX>=0 && tileX<this.width) {
-            if (tileY>=0 && tileY<this.height) {
-            if (this.tile[tileX][tileY].flora>0) {
-                this.tile[tileX][tileY].flora--;
-                found=true;
+    for (var i=0; i<2; i++) {
+        for (var j=0; j<2; j++) {
+            if (tileX+i>=0 && tileX+i<this.width) {
+                    if (tileY+j>=0 && tileY+j<this.height) {
+                    if (this.tile[tileX+i][tileY+j].flora>0) {
+                        this.tile[tileX+i][tileY+j].flora--;
+                        return true;
+                    }
+                }
             }
         }
     }
-    return found;
+    return false;
+};
+
+Terrain.prototype.isGround = function(x,y) {
+    var tileX= Math.floor(x/this.tileSize);
+    var tileY= Math.floor(y/this.tileSize);
+    if (tileX>=0 && tileX<this.width) {
+        if (tileY>=0 && tileY<this.height) {
+            return (this.tile[tileX][tileY].ground);
+        }
+    }
+    return false;
 };
 
 Terrain.prototype.totalFlora = function() {
@@ -90,12 +150,13 @@ Terrain.prototype.totalFlora = function() {
                 total += this.tile[i][j].flora;
             }
         }
-  return total  
+  return total;  
 };
 
 
 // TERRAIN TILE OBJECT CLASS
 function Tile() {
+    this.ground=true;
     this.flora=0;
     this.maxFlora=0;
     this.bones = false;

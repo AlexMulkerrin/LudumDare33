@@ -16,7 +16,7 @@ function Control(canvasName, simulation) {
     var t = this;
     // MOUSE CONTROLS
     this.targetCanvas.onmouseenter = function() {t.mouseOver=true;};
-    this.targetCanvas.onmouseleave = function() {t.mouseExits(event)};
+    this.targetCanvas.onmouseleave = function() {t.mouseExits(event);};
     
     this.targetCanvas.onmousemove = function(event) {t.mouseUpdateCoords(event);};
     
@@ -26,14 +26,26 @@ function Control(canvasName, simulation) {
     // dummy functions to avoid rightclicking bringing up edit menu
     this.targetCanvas.oncontextmenu= function(event) {return false;};
     this.targetCanvas.onselectstart= function(event) {return false;};
-    // KEYBOARD CONTROLS
-    document.onkeydown = function(event) {
-        var keyCode = window.event.keyCode;
-        if (keyCode === 80) { // p key
+    
+    // KEYBOARD CONTROLS using unicode keycodes
+    document.onkeypress = function(event) {
+        var keyCode = event.keyCode || window.event.keyCode;
+        if (keyCode === 104) { // h key
+            t.targetSim.toggleInterface();
+        }
+        if (keyCode === 112 || keyCode === 80) { // p key
             t.targetSim.togglePause();
         }
-        if (keyCode === 65) { // a key
+        if (keyCode === 97 || keyCode === 65) { // a key
             t.targetSim.selectAll();
+        }
+        for (var i=1; i<10; i++) {
+            if (keyCode === (48+i)) { //1-9 keys 
+                t.targetSim.build(i);
+            }
+            if (keyCode === 48) { // 0 key
+                t.targetSim.build(10);
+            }
         }
     };
 }

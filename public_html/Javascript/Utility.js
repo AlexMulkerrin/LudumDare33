@@ -1,6 +1,5 @@
 /* General purpose utility functions that don't really belong
- * to a single domain
- * 
+ * to a single domain. 
  */
 function RGB(red,green,blue) {
     var colourString="#";
