@@ -4,7 +4,7 @@
 
 // SIMULATION OBJECT CLASS
 function Simulation() {
-    this.running = false;
+    this.running = true;
     this.showInterface = true;
     
     var width = Math.floor(window.innerWidth/16);
@@ -25,6 +25,9 @@ function Simulation() {
     this.unit = [];
     // the SwarmLord :D
     this.unit[0] = new Unit(window.innerWidth/2,window.innerHeight/2, unitTypes[0], 1);
+    this.unit[0].eaten = 50;
+    this.unit[0].selected = true;
+    
     var x,y,type,faction;
     for(var i=1; i<this.unitNum; i++) {
         x=0,y=0;
@@ -37,7 +40,7 @@ function Simulation() {
         faction = random(this.factionNum-2)+2;
         this.unit[i] = new Unit(x, y, type, faction);
     }
-    this.selectedNum = 0;
+    this.selectedNum = 1;
     this.totalBiomass = 0;
 }
 // METHODS

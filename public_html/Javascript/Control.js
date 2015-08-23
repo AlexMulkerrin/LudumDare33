@@ -67,14 +67,18 @@ Control.prototype.mouseExits = function(event) {
 
 Control.prototype.mousePressed = function(event) {
     this.mouseButton = event.which;
-    if (this.mouseButton === 3 ) { //right mouse button
-        this.giveMoveOrder();
+    if (this.mouseButton === 1 && this.mouseY>window.innerHeight-80 && this.targetSim.showInterface) { // left mouse button over menu
+        this.checkInterfaceButtons();
     } else {
-        this.selection.left = Math.floor(event.layerX);
-        this.selection.top = Math.floor(event.layerY);
-        this.selection.right= this.selection.left;
-        this.selection.bottom = this.selection.top;
-        this.mouseIsPressed=true;
+        if (this.mouseButton === 3 ) { //right mouse button
+            this.giveMoveOrder();
+        } else {
+            this.selection.left = Math.floor(event.layerX);
+            this.selection.top = Math.floor(event.layerY);
+            this.selection.right= this.selection.left;
+            this.selection.bottom = this.selection.top;
+            this.mouseIsPressed=true;
+        }
     }
 };
 
@@ -106,6 +110,18 @@ Control.prototype.lassoUnits = function() {
 
 Control.prototype.giveMoveOrder = function() {
     this.targetSim.setTarget(this.mouseX,this.mouseY);
+};
+
+Control.prototype.checkInterfaceButtons = function() {
+  // kludge to check collision on buttons 
+  var found = -1;
+  for (var i = 1; i<11; i++) { // only first 10 units are bugs...for now :?
+        if (this.mouseX > i*78-78) {
+            found = i;
+        }
+    }
+    if (this.mouseX> 10*78 ) found =-1;
+    if (found !== -1) this.targetSim.build(found);
 };
 
 
