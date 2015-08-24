@@ -1,4 +1,4 @@
-# LudumDare33
+# LudumDare33 - SwarmLord
 Ludum Dare Game competition entry
 
 Bug themed RTS where you fight against robots. 
