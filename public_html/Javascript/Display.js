@@ -15,11 +15,88 @@ function Display(canvasName, simulation, player) {
     
     this.sqSize= 16;
     this.unitSize = 16;
+    
+    this.sprite = [];
+    this.tileSet = [];
+    this.getImages();
+    
+    this.background = document.createElement('canvas');
+    var t= this;
+    this.tileSet[11].onload = function () {
+        t.makeBackground(t.background);
+    };
+    
+    
+    
 }
 // METHODS
+Display.prototype.getImages = function() {
+    for (var i=0; i<unitTypes.length; i++) {
+        this.sprite[unitTypes[i].name] = new Image();
+        this.sprite[unitTypes[i].name+"Dead"] = new Image();
+        this.sprite[unitTypes[i].name].src = "Assets/Images/Units/"+unitTypes[i].species+"/"+unitTypes[i].name+".png";
+        this.sprite[unitTypes[i].name+"Dead"].src = "Assets/Images/Units/"+unitTypes[i].species+"/"+unitTypes[i].name+"Dead.png";
+    }
+    for (var i=0; i<12; i++) {
+        this.tileSet[i] = new Image();
+    }
+    
+    this.tileSet[0].src = "Assets/Images/Terrain/Rock.png";
+    this.tileSet[1].src = "Assets/Images/Terrain/RockEdges.png";
+    this.tileSet[2].src = "Assets/Images/Terrain/Dirt.png";
+    this.tileSet[3].src = "Assets/Images/Terrain/DirtEdges.png";
+    this.tileSet[4].src = "Assets/Images/Terrain/Grass.png";
+    this.tileSet[5].src = "Assets/Images/Terrain/GrassEdges.png";
+    this.tileSet[6].src = "Assets/Images/Terrain/Tree.png";
+    this.tileSet[7].src = "Assets/Images/Terrain/BareTree.png";
+    this.tileSet[8].src = "Assets/Images/Terrain/Stump.png";
+    this.tileSet[9].src = "Assets/Images/Terrain/Bones.png";
+    this.tileSet[10].src = "Assets/Images/Terrain/Wreck.png";
+    this.tileSet[11].src = "Assets/Images/Terrain/Sky.png";
+};
+
+Display.prototype.makeBackground = function(background) { 
+    background.width = window.innerWidth;
+    background.height = window.innerHeight;
+    background.ctx = background.getContext("2d");
+    
+    var sx = Math.ceil(window.innerWidth/512);
+    var sy = Math.ceil(window.innerWidth/512);
+    for (var i=0; i<sx; i++) {
+        for (var j=0; j<sy; j++) {
+            background.ctx.drawImage(this.tileSet[11], i*512, j*512);
+        }
+    }
+    
+    //background.ctx.fillStyle = "#E8F6FF";
+    //background.ctx.fillRect(0,0,background.width,background.height);
+    var sqSize = this.sqSize;
+    for (var i=0; i<this.targetSim.map.width; i++) {
+        for (var j=0; j<this.targetSim.map.height; j++) {
+            if (this.targetSim.map.tile[i][j].ground) {
+                background.ctx.drawImage(this.tileSet[1], i*sqSize-2, j*sqSize-2);
+            }
+        }
+    }
+    for (var i=0; i<this.targetSim.map.width; i++) {
+        for (var j=0; j<this.targetSim.map.height; j++) {
+            if (this.targetSim.map.tile[i][j].ground) {
+                if (this.targetSim.map.tile[i][j].tree) {
+                    background.ctx.drawImage(this.tileSet[8], i*sqSize, j*sqSize);
+                } else {
+                    background.ctx.drawImage(this.tileSet[0], i*sqSize, j*sqSize);
+                }
+            }
+        }
+    }
+    
+};
+
 Display.prototype.update = function() {
+    this.drawBackground();
     this.drawMap();
     this.drawUnits();
+    this.drawEffects();
     this.drawText();
     if (this.targetSim.showInterface) {
         this.drawStatusBar();
@@ -27,22 +104,64 @@ Display.prototype.update = function() {
     }
     this.drawControl();
 };
-Display.prototype.drawMap = function() {
-    this.ctx.setTransform(1,0,0,1,0,0); // make sure rotations don't mess up positioning
-    this.ctx.fillStyle = "#E8F6FF";
-    this.ctx.fillRect(0,0,this.canvas.width,this.canvas.height);
-    var sqSize = this.sqSize;
-    for (var i=0; i<this.targetSim.map.width; i++) {
-        for (var j=0; j<this.targetSim.map.height; j++) {
-            if (this.targetSim.map.tile[i][j].ground) {
-                this.ctx.fillStyle = palette[this.targetSim.map.tile[i][j].flora];
-                this.ctx.fillRect(i*sqSize,j*sqSize,sqSize,sqSize);
-            }
 
+Display.prototype.drawBackground = function() {
+    this.ctx.setTransform(1,0,0,1,0,0);
+    this.ctx.drawImage(this.background, 0, 0);
+};
+
+Display.prototype.drawMap = function() {
+     // make sure rotations don't mess up positioning
+    //this.ctx.fillStyle = "#E8F6FF";
+    //this.ctx.fillRect(0,0,this.canvas.width,this.canvas.height);
+    var sqSize = this.sqSize;
+    
+    for (var layer=1; layer<4; layer++) {
+        for (var i=0; i<this.targetSim.map.width; i++) {
+            for (var j=0; j<this.targetSim.map.height; j++) {
+                if (this.targetSim.map.tile[i][j].ground) {
+                    if (this.targetSim.map.tile[i][j].flora===layer || layer===0) {
+                        this.ctx.drawImage(this.tileSet[layer*2+1], i*sqSize-2, j*sqSize-2);
+                    }
+                }
+            }
+        }
+        for (var i=0; i<this.targetSim.map.width; i++) {
+            for (var j=0; j<this.targetSim.map.height; j++) {
+                if (this.targetSim.map.tile[i][j].ground) {
+                    if (this.targetSim.map.tile[i][j].flora===layer || layer===0) {
+                        
+                        if (this.targetSim.map.tile[i][j].tree) {
+                            this.ctx.drawImage(this.tileSet[8-layer], i*sqSize, j*sqSize);
+                        } else {
+                            this.ctx.drawImage(this.tileSet[layer*2], i*sqSize, j*sqSize);
+                        }
+                    }
+                }
+            }
         }
     }
     
 };
+Display.prototype.drawEffects = function() {
+    var eventList = this.targetSim.eventList;
+    for (var i=0; i<eventList.length; i++) {
+        if (eventList[i].timeLeft>0) {
+            this.ctx.fillStyle= "#ff0000";
+            this.ctx.beginPath(); 
+            this.ctx.lineWidth=eventList[i].timeLeft;
+            if( eventList[i].source.type.species==="Bug") {
+                this.ctx.strokeStyle="#00ff00";
+            } else {
+                this.ctx.strokeStyle="#ff0000";
+            }
+            this.ctx.moveTo(eventList[i].source.x,eventList[i].source.y);
+            this.ctx.lineTo(eventList[i].destination.x,eventList[i].destination.y);
+            this.ctx.stroke();
+        }
+    }
+};
+
 Display.prototype.drawUnits = function() {
     var size = this.unitSize;
     var colour = "#0000ff", secondColour = "#ff00ff";
@@ -82,9 +201,10 @@ Display.prototype.drawUnits = function() {
 
 Display.prototype.drawRotated = function(unit, colour, secondColour) {
     this.ctx.translate(unit.x,unit.y);
-    this.ctx.rotate(unit.radians);
-    this.drawBug(unit, colour, secondColour);
-    this.ctx.rotate(-unit.radians);
+    this.ctx.rotate(unit.radians+unit.animationCycle);
+    //this.drawBug(unit, colour, secondColour);
+    this.drawSprite(unit);
+    this.ctx.rotate(-unit.radians-unit.animationCycle);
     this.ctx.translate(-unit.x,-unit.y);
 };
 
@@ -132,6 +252,18 @@ Display.prototype.drawBug = function(unit, colour,secondColour) {
     }   
 };
 
+Display.prototype.drawSprite = function(unit) {
+    if (unit.isAlive) {
+        this.ctx.drawImage(this.sprite[unit.type.name], -unit.type.size/2, -unit.type.size/2);
+    } else {
+        this.ctx.drawImage(this.sprite[unit.type.name+"Dead"], -unit.type.size/2, -unit.type.size/2);
+    }
+
+    if (unit.selected) {
+        this.drawHighlight(unit.type.size*0.75,"#ffffff");
+    }
+};
+
 Display.prototype.drawHighlight = function(size,colour) {
     this.ctx.fillStyle = colour;
     
@@ -142,7 +274,6 @@ Display.prototype.drawHighlight = function(size,colour) {
 };
 
 Display.prototype.drawText = function() {
-    //var string ="";
     if (!this.targetSim.running) {
         this.ctx.fillStyle="#0040bF";
         this.ctx.fillRect(window.innerWidth/2-70,window.innerHeight/2-50,165,40);
@@ -152,8 +283,8 @@ Display.prototype.drawText = function() {
     }
 //    this.ctx.fillStyle="#000000";
 //    this.ctx.font="16px Arial";
-//    string +="Selected: " + this.targetSim.listSelected();
-    //this.ctx.fillText(string,5,80);
+//    var string ="Selected: " + this.targetSim.eventList[1].source.x;
+//    this.ctx.fillText(string,5,80);
 };
 
 Display.prototype.drawStatusBar = function() {
@@ -200,7 +331,7 @@ Display.prototype.drawStatusBar = function() {
 Display.prototype.drawMenuBar = function() {
     var bottom = window.innerHeight;
     this.ctx.fillStyle="#0040bF";
-    this.ctx.fillRect(0,bottom-120,10*78,120);
+    this.ctx.fillRect(0,bottom-120,buildNum*78,120);
     
     this.ctx.fillStyle="#ffffff";
     this.ctx.font="20px Arial";
@@ -208,7 +339,7 @@ Display.prototype.drawMenuBar = function() {
     this.ctx.fillText(string,5,bottom-100);
     
     this.ctx.font="16px Arial";
-    for (var i=1; i<11; i++) { // only first 10 units are bugs...for now :?
+    for (var i=1; i<=buildNum; i++) { // only first 10 units are bugs...for now :?
         this.ctx.fillStyle="#D1EDFF";
         this.ctx.fillRect(i*78-74,bottom-95,68,90);
         
@@ -232,11 +363,11 @@ Display.prototype.drawMenuBar = function() {
 };
 Display.prototype.drawControl = function() {
     if (this.targetPlayer.mouseOver) {
-        this.ctx.fillStyle= RGB(255,100,100);
+        this.ctx.fillStyle= RGB(255,0,0);
         var x = this.targetPlayer.mouseX;
         var y = this.targetPlayer.mouseY;
-        this.ctx.fillRect(x-5,y,11,1);
-        this.ctx.fillRect(x,y-5,1,11);
+        this.ctx.fillRect(x-5,y,13,3);
+        this.ctx.fillRect(x,y-5,3,13);
     }
     // draw selection box
     if (this.targetPlayer.mouseIsPressed) {
@@ -247,7 +378,7 @@ Display.prototype.drawControl = function() {
         this.ctx.fillStyle= RGB(255,255,255);
         this.ctx.beginPath(); 
         this.ctx.lineWidth="1";
-        this.ctx.strokeStyle="white"; // Green path
+        this.ctx.strokeStyle="white";
         this.ctx.moveTo(left,top);
         this.ctx.lineTo(right,top);
         this.ctx.lineTo(right,bottom);

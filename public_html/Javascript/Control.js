@@ -2,9 +2,10 @@
  * sending events to relevant parts of the program or simulation
 */
 // OBJECT CLASS
-function Control(canvasName, simulation) {
+function Control(canvasName, simulation, audio) {
     this.targetCanvas = document.getElementById(canvasName);
     this.targetSim = simulation;
+    this.targetAudio = audio;
     
     this.mouseX = 0;
     this.mouseY = 0;
@@ -31,17 +32,28 @@ function Control(canvasName, simulation) {
     document.onkeydown = function(event) {
         if (event===null) keyCode = window.event.keyCode;
 	else keyCode = event.keyCode;
-        //var keyCode = event.keyCode || window.event.keyCode;
-        if (keyCode === 104) { // h key
+        if (keyCode === 104 || keyCode === 72) { // h key
             t.targetSim.toggleInterface();
         }
+        
+        if (keyCode === 102 || keyCode === 77) { // m key
+            t.targetAudio.toggleMute();
+        }
+        
         if (keyCode === 112 || keyCode === 80) { // p key
             t.targetSim.togglePause();
+            t.targetAudio.toggleMute();
         }
-        if (keyCode === 97 || keyCode === 65) { // a key
+        if (keyCode === 113 || keyCode === 81) { // q key 'queen'
+            t.targetSim.selectCommander();
+        }
+        if (keyCode === 119 || keyCode === 87) { // w key 'warriors'
+            t.targetSim.selectMilitary();
+        }
+        if (keyCode === 1 || keyCode === 69) { // e key 'everyone'
             t.targetSim.selectAll();
         }
-        for (var i=1; i<10; i++) {
+        for (var i=1; i<=buildNum; i++) {
             if (keyCode === (48+i)) { //1-9 keys 
                 t.targetSim.build(i);
             }

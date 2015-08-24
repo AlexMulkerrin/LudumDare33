@@ -6,12 +6,14 @@ var state = { stopped:0, idle:1, wander:2, going:3};
 function Unit(x, y, type, faction) {
     this.isAlive = true;
     
+    
     this.x = x;
     this.y = y;
     this.vx = 0;
     this.vy = 0;
     this.radians = Math.random()*Math.PI*2;
-    this.animationCycle = random(10);
+    this.animationCycle = Math.random()*0.2-0.1;
+    this.adirec=0.02;
     
     this.type = type;
 //    this.size = 16;//random(30)+5; handled by unit types now!
@@ -34,14 +36,27 @@ function Unit(x, y, type, faction) {
 }
 // METHODS
 Unit.prototype.update = function() {
-    this.animationCycle++;
-    if (this.animationCycle>10) this.animationCycle=0;
+    
     if (this.cooldown>0) this.cooldown--;
-    this.eaten-=0.1; // always hungry
-    if (this.eaten<0) {
-        this.health--;
-        this.eaten=1;
-    } 
+    
+    // heal with food
+    if (this.type.species==="Bug") {
+        
+        this.animationCycle+=this.adirec;
+        if (this.animationCycle>0.1) this.adirec=-0.03;
+        if (this.animationCycle<-0.1) this.adirec=0.03;
+        
+        if (this.health < this.type.health) {
+            this.eaten-=0.1;
+            this.health+=0.1;
+        }
+
+        this.eaten-=0.1; // always hungry
+        if (this.eaten<0) {
+            this.health-=0.5;
+            this.eaten=0;
+        } 
+    }
     this.movement();
 };
 
@@ -107,8 +122,10 @@ Unit.prototype.setCourse = function() {
 };
 
 Unit.prototype.setRandomCourse = function() {
-    this.targX = this.x + random(this.type.speed*8)-this.type.speed*4;
-    this.targY = this.y + random(this.type.speed*8)-this.type.speed*4;
+//    if (this.type.species==="Bug") {
+        this.targX = this.x + random(this.type.speed*8)-this.type.speed*4;
+        this.targY = this.y + random(this.type.speed*8)-this.type.speed*4;
+
     
     if (this.targX<0) this.targX=0;
     if (this.targX>window.innerWidth) this.targX=window.innerWidth;
@@ -116,6 +133,16 @@ Unit.prototype.setRandomCourse = function() {
     if (this.targY>window.innerHeight) this.targY=window.innerHeight;
     
     this.setCourse();
+};
+
+Unit.prototype.setDriveDirection = function() {
+
+    var direction = [[0,1],[0,1],[-1,0],[0,-1]];
+    var choice = random(direction.length);
+    var dist = random(this.type.speed*8);
+    this.targX = this.x + dist*direction[choice][0];
+    this.targY = this.y + dist*direction[choice][1];
+
 };
 
 Unit.prototype.isNearTarget = function() {

@@ -1,11 +1,12 @@
 /* Simulation object keeps track of all game object's state
  * and handles updating them. Has a subclass for factions.
 */
-
+var buildNum =7;
 // SIMULATION OBJECT CLASS
-function Simulation() {
+function Simulation(audio) {
     this.running = true;
     this.showInterface = true;
+    this.targetAudio = audio;
     
     var width = Math.floor(window.innerWidth/16);
     var height = Math.floor(window.innerHeight/16);
@@ -36,12 +37,13 @@ function Simulation() {
             y = Math.random()*window.innerHeight;
         }
         
-        type = unitTypes[random(unitTypes.length)];
-        faction = random(this.factionNum-2)+2;
+        type = unitTypes[random(unitTypes.length-(buildNum+1))+buildNum+1];
+        faction = 2;//random(this.factionNum-2)+2;
         this.unit[i] = new Unit(x, y, type, faction);
     }
     this.selectedNum = 1;
     this.totalBiomass = 0;
+    this.eventList = [];
 }
 // METHODS
 Simulation.prototype.update = function() {
@@ -49,11 +51,16 @@ Simulation.prototype.update = function() {
         for(var i=0; i<this.unitNum; i++) {
             var unit = this.unit[i];
                 if (unit.isAlive) {
+                    if (unit.action === state.wander) {
+                        if (this.map.isGround(unit.targX,unit.targY)===false) {
+                            unit.action = state.idle;
+                        }
+                    }
                     unit.update();
                     if (unit.cooldown===0) {
                         var closestFoe = this.findClosestFoe(i);
                         if (closestFoe === -1) {
-                            if (unit.eaten < unit.type.store) {
+                            if (unit.eaten < unit.type.store && (unit.type.species==="Bug" || unit.type.name==="Replicator")) {
                               // no foes in range, safe to eat;
                                 var closestFood = this.findClosestFood(i);
                                 if (closestFood !== -1) {
@@ -73,6 +80,11 @@ Simulation.prototype.update = function() {
                             this.unit[closestFoe].health -= damage; 
                             unit.cooldown = unit.type.cooldown;
                             this.addEvent(unit,this.unit[closestFoe]);
+                            if (unit.type.species==="Bug") {
+                                this.targetAudio.playSound(14);
+                            } else {
+                                this.targetAudio.playSound(16);
+                            }
                         }
                     }
                 }
@@ -81,10 +93,16 @@ Simulation.prototype.update = function() {
         for(var i=0; i<this.unitNum; i++) {
             if (this.unit[i].isAlive && this.unit[i].health<1) {
                 this.unit[i].die();
+                if (this.unit[i].type.species==="Bug") {
+                    this.targetAudio.playSound(13);
+                } else {
+                    this.targetAudio.playSound(15);
+                }
             };
         }
     }
     this.updateTotals();
+    this.updateEvents();
 };
 Simulation.prototype.togglePause = function() {
     if (this.running) {
@@ -103,7 +121,8 @@ Simulation.prototype.toggleInterface = function() {
 };
 
 Simulation.prototype.addEvent = function(a,b) {
-    
+    var event = new EventLog(a,b);
+    this.eventList.push(event);
 };
 
 Simulation.prototype.setSelected = function(left,top,right,bottom) {
@@ -124,6 +143,31 @@ Simulation.prototype.setSelected = function(left,top,right,bottom) {
    }
 };
 
+Simulation.prototype.selectCommander = function() {
+    this.selectedNum = 0;
+    for(var i=0; i<this.unitNum; i++) {
+       this.unit[i].selected=false;  
+   }
+   if (this.unit[0].faction === 1) {
+    this.unit[0].selected = true;
+    this.selectedNum = 1;
+    }
+    if (this.selectedNum>0) this.targetAudio.playSound(9);
+};
+
+Simulation.prototype.selectMilitary = function() {
+    this.selectedNum = 0;
+    this.unit[0].selected=false;
+    for(var i=1; i<this.unitNum; i++) {
+       this.unit[i].selected=false;
+       if (this.unit[i].faction === 1) {
+           this.unit[i].selected=true;
+           this.selectedNum++;
+       }   
+   }
+   if (this.selectedNum>0) this.targetAudio.playSound(10);
+};
+
 Simulation.prototype.selectAll = function() {
     this.selectedNum = 0;
     for(var i=0; i<this.unitNum; i++) {
@@ -133,6 +177,7 @@ Simulation.prototype.selectAll = function() {
            this.selectedNum++;
        }   
    }
+   if (this.selectedNum>0) this.targetAudio.playSound(8);
 };
 
 Simulation.prototype.setTarget = function(targetX, targetY) {
@@ -215,22 +260,23 @@ Simulation.prototype.findClosestFlora = function(unit) {
 };
 
 Simulation.prototype.eatFood = function(unit) {
-    if (unit.health < unit.type.health) {
-        unit.health+=1;
-        
-    } else {
+//    if (unit.health < unit.type.health) {
+//        unit.health+=1;
+//        
+//    } else {
         unit.eaten+=1;
         
-        if (unit.eaten >= unit.type.store && unit.type.builder) {
+        if (unit.eaten >= unit.type.store && unit.type.name==="Replicator") {
             this.createUnit(unit, -1);
         }
-    } 
+    //} 
     unit.cooldown = 3;
 };
 
 Simulation.prototype.build = function(type) {
-    if (this.unit[0].eaten > unitTypes[type].cost) {
+    if (this.unit[0].eaten > unitTypes[type].cost && this.unit[0].isAlive) {
         this.createUnit(this.unit[0], type);
+        this.targetAudio.playSound(type);
     }
 };
 
@@ -289,6 +335,14 @@ Simulation.prototype.updateTotals = function() {
     
 };
 
+Simulation.prototype.updateEvents= function() {
+    for (var i=0; i<this.eventList.length; i++) {
+        if (this.eventList[i].timeLeft>0) {
+            this.eventList[i].timeLeft--;
+        }
+    }
+};
+
 Simulation.prototype.listSelected = function() {
     var total = 0;
     for(var i=0; i<this.unitNum; i++) {
@@ -304,6 +358,13 @@ function Faction() {
     this.colour = randomRGB();
     this.secondColour = changeSaturation(this.colour, 0.5);
     this.totalUnits = 0;
+}
+
+//  EVENTLOG OBJECT CLASS
+function EventLog(a,b) {
+    this.source = a;
+    this.destination = b;
+    this.timeLeft=5;
 }
 
 
