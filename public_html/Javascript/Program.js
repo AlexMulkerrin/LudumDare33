@@ -6,7 +6,8 @@ function loadProgram() {
     var program = new Program("Canvas");
     
     setInterval(function(){ program.update();},program.refreshDelay);
-    program.audio.playMusic();
+    //program.audio.playMusic();
+    program.simulation.togglePause();
 }
 // OBJECT CLASS
 function Program(canvasName) {

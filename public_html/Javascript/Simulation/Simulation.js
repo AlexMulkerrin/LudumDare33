@@ -4,8 +4,11 @@
 var buildNum =7;
 // SIMULATION OBJECT CLASS
 function Simulation(audio) {
-    this.running = true;
+    this.running = false;
+    this.gameState = "loading";
+    this.winAnimation=0;
     this.showInterface = true;
+    
     this.targetAudio = audio;
     
     var width = Math.floor(window.innerWidth/16);
@@ -45,9 +48,62 @@ function Simulation(audio) {
     this.totalBiomass = 0;
     this.eventList = [];
 }
+
+Simulation.prototype.restart = function() {
+    this.running = false;
+    this.gameState = "reset";
+    this.winAnimation=0;
+    //this.showInterface = true;
+    if (this.targetAudio.muted===false) this.targetAudio.toggleMute();
+    //this.targetAudio = audio;
+    
+    var width = Math.floor(window.innerWidth/16);
+    var height = Math.floor(window.innerHeight/16);
+    
+    this.map = new Terrain(width,height);
+    this.map.generateMap();
+    
+    this.factionNum=10;
+    this.faction = [];
+    for(var i=0; i<this.factionNum; i++) {
+        this.faction[i] = new Faction();
+    }
+    this.faction[0].colour = "#9E8F6E";
+    this.faction[0].secondColour = changeSaturation(this.faction[0].colour, 0.5);
+    
+    this.unitNum=10;
+    this.unit = [];
+    // the SwarmLord :D
+    this.unit[0] = new Unit(window.innerWidth/2,window.innerHeight/2, unitTypes[0], 1);
+    this.unit[0].eaten = 50;
+    this.unit[0].selected = true;
+    
+    var x,y,type,faction;
+    for(var i=1; i<this.unitNum; i++) {
+        x=0,y=0;
+        while (this.map.isGround(x,y)===false) {
+            x = Math.random()*window.innerWidth;
+            y = Math.random()*window.innerHeight;
+        }
+        
+        type = unitTypes[random(unitTypes.length-(buildNum+1))+buildNum+1];
+        faction = 2;//random(this.factionNum-2)+2;
+        this.unit[i] = new Unit(x, y, type, faction);
+    }
+    this.selectedNum = 1;
+    this.totalBiomass = 0;
+    this.eventList = [];
+    
+};
 // METHODS
 Simulation.prototype.update = function() {
+    
     if (this.running) {
+        
+        if (this.gameState==="Victory") {
+            this.winAnimation+=0.2;
+        }
+        
         for(var i=0; i<this.unitNum; i++) {
             var unit = this.unit[i];
                 if (unit.isAlive) {
@@ -332,6 +388,16 @@ Simulation.prototype.updateTotals = function() {
     }
     this.totalBiomass += this.map.totalFlora();
     this.totalBiomass = Math.floor(this.totalBiomass);
+    
+    if (this.unit[0].isAlive===false && this.gameState==="playing") {
+        this.gameState="Defeat";
+        this.targetAudio.currentTrack.pause();
+        this.targetAudio.playSound(17);
+    } else if (this.faction[2].totalUnits===0) {
+        this.gameState="Victory";
+        this.targetAudio.currentTrack.pause();
+        this.targetAudio.playSound(18);
+    }
     
 };
 

@@ -16,21 +16,38 @@ function Display(canvasName, simulation, player) {
     this.sqSize= 16;
     this.unitSize = 16;
     
+    this.title = [];
     this.sprite = [];
     this.tileSet = [];
     this.getImages();
-    
+    this.loaded=0;
     this.background = document.createElement('canvas');
-    var t= this;
-    this.tileSet[11].onload = function () {
-        t.makeBackground(t.background);
-    };
+    var t = this;
+    for (var i=0; i<this.tileSet.length; i++) {
+        this.tileSet[i].onload = function () {
+            t.loaded++;
+            if(t.loaded===t.tileSet.length) {
+                t.targetSim.togglePause();
+                t.targetSim.gameState="playing";
+                t.makeBackground(t.background);
+            }
+        };
+    }
     
     
-    
+   
 }
 // METHODS
 Display.prototype.getImages = function() {
+    
+    
+    for (var i=0; i<3; i++) {
+        this.title[i] = new Image();
+    }
+    this.title[0].src = "Assets/Images/Titles/Main Title.png";
+    this.title[1].src = "Assets/Images/Titles/Defeat.png";
+    this.title[2].src = "Assets/Images/Titles/Victory.png";
+    
     for (var i=0; i<unitTypes.length; i++) {
         this.sprite[unitTypes[i].name] = new Image();
         this.sprite[unitTypes[i].name+"Dead"] = new Image();
@@ -93,6 +110,11 @@ Display.prototype.makeBackground = function(background) {
 };
 
 Display.prototype.update = function() {
+    if (this.targetSim.gameState==="reset") {
+        this.makeBackground(this.background);
+        this.targetSim.gameState="playing";
+            
+    }
     this.drawBackground();
     this.drawMap();
     this.drawUnits();
@@ -107,6 +129,8 @@ Display.prototype.update = function() {
 
 Display.prototype.drawBackground = function() {
     this.ctx.setTransform(1,0,0,1,0,0);
+    this.ctx.fillStyle="#000000";
+    this.ctx.fillRect(0,0,window.innerWidth,window.innerHeight);
     this.ctx.drawImage(this.background, 0, 0);
 };
 
@@ -186,6 +210,15 @@ Display.prototype.drawUnits = function() {
             this.ctx.fillStyle= "#00ffff";
             this.ctx.fillRect(sx,sy-5,fraction*unit.type.size,1);
         } 
+        if (unit.type.name==="Swarmlord" && unit.isAlive) {
+            var fraction = unit.eaten/unit.type.store;
+            var sx = Math.floor(unit.x);
+            var sy = Math.floor(unit.y);
+            this.ctx.fillStyle= "#cccccc";
+            this.ctx.fillRect(sx,sy,unit.type.size,1);
+            this.ctx.fillStyle= "#ffff00";
+            this.ctx.fillRect(sx,sy,fraction*unit.type.size,1);
+        }
         if (unit.food>0) {
             var fraction = unit.food/unit.type.cost;
             var sx = Math.floor(unit.x);
@@ -201,10 +234,12 @@ Display.prototype.drawUnits = function() {
 
 Display.prototype.drawRotated = function(unit, colour, secondColour) {
     this.ctx.translate(unit.x,unit.y);
-    this.ctx.rotate(unit.radians+unit.animationCycle);
+    var rotation = unit.radians+unit.animationCycle;
+    if (unit.isAlive) rotation+=this.targetSim.winAnimation; 
+    this.ctx.rotate(rotation);
     //this.drawBug(unit, colour, secondColour);
     this.drawSprite(unit);
-    this.ctx.rotate(-unit.radians-unit.animationCycle);
+    this.ctx.rotate(-rotation);
     this.ctx.translate(-unit.x,-unit.y);
 };
 
@@ -279,8 +314,62 @@ Display.prototype.drawText = function() {
         this.ctx.fillRect(window.innerWidth/2-70,window.innerHeight/2-50,165,40);
         this.ctx.fillStyle="#ffffff";
         this.ctx.font="bold 30px Arial";
-        this.ctx.fillText("PAUSED",window.innerWidth/2-50,window.innerHeight/2-20);
+        //switch (this.targetSim.gameState)
+        this.ctx.drawImage(this.title[0],window.innerWidth/2-120,window.innerHeight/2-140);
+        if (this.targetSim.gameState==="loading") {
+            this.ctx.fillText("LOADING",window.innerWidth/2-50,window.innerHeight/2-20);
+  
+        } else {
+            this.ctx.fillText("PAUSED",window.innerWidth/2-50,window.innerHeight/2-20);
+            
+            this.ctx.fillStyle="#467596";
+            this.ctx.fillRect(0,60,180,190);
+            
+            this.ctx.fillStyle="#ffffff";
+            this.ctx.font="16px Arial";
+            this.ctx.fillText("HOTKEYS",25,80);
+            this.ctx.fillText("P to unpause",5,100);
+            this.ctx.fillText("M to mute",5,120);
+            this.ctx.fillText("H to hide interface",5,140);
+            this.ctx.fillText("Q to select SwarmLord",5,160);
+            this.ctx.fillText("W to select warriors",5,180);
+            this.ctx.fillText("E to select all",5,200);
+            this.ctx.fillText("1-7 to build",5,220);
+            this.ctx.fillText("and N to restart :)",5,240);
+            
+            this.ctx.fillStyle="#467596";
+            this.ctx.fillRect(window.innerWidth-205,60,205,120);
+            
+            this.ctx.fillStyle="#ffffff";
+            this.ctx.fillText("CREDITS",window.innerWidth-180,80);
+            this.ctx.fillText("Alex Mulkerrin - Code",window.innerWidth-200,110);
+            this.ctx.fillText("David Mulkerrin - Graphics",window.innerWidth-200,130);
+            this.ctx.fillText("Iain Mulkerrin - Sounds",window.innerWidth-200,150);
+            this.ctx.fillText("David Devereux - Music",window.innerWidth-200,170);
+            
+            
+        }
     }
+    
+    if (this.targetSim.gameState==="Defeat") {
+        this.ctx.drawImage(this.title[1],window.innerWidth/2-120,window.innerHeight/2-140);
+        this.ctx.fillStyle="#0040bF";
+        this.ctx.fillRect(window.innerWidth/2-120,window.innerHeight/2-50,270,40);
+        this.ctx.fillStyle="#ffffff";
+        this.ctx.font="bold 30px Arial";
+        this.ctx.fillText("Press N to retry",window.innerWidth/2-100,window.innerHeight/2-20);
+    } else if (this.targetSim.gameState==="Victory") {
+        this.ctx.drawImage(this.title[2],window.innerWidth/2-120,window.innerHeight/2-140);
+        this.ctx.fillStyle="#0040bF";
+        this.ctx.fillRect(window.innerWidth/2-120,window.innerHeight/2-50,340,40);
+        this.ctx.fillStyle="#ffffff";
+        this.ctx.font="bold 30px Arial";
+        this.ctx.fillText("Press N to play again",window.innerWidth/2-100,window.innerHeight/2-20);
+    }
+    
+    
+    //this.ctx.drawImage(this.title[0],window.innerWidth/2-50,window.innerHeight/2-20);
+    
 //    this.ctx.fillStyle="#000000";
 //    this.ctx.font="16px Arial";
 //    var string ="Selected: " + this.targetSim.eventList[1].source.x;

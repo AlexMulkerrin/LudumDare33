@@ -32,15 +32,22 @@ function Control(canvasName, simulation, audio) {
     document.onkeydown = function(event) {
         if (event===null) keyCode = window.event.keyCode;
 	else keyCode = event.keyCode;
-        if (keyCode === 104 || keyCode === 72) { // h key
+        
+        if (keyCode === 110 || keyCode === 78) { // new game
+            //t.targetAudio.toggleMute();
+            t.targetSim.restart();
+            // aaand it doesn't quite work :/
+        }
+        
+        if (keyCode === 104 || keyCode === 72) { // h key hide interface
             t.targetSim.toggleInterface();
         }
         
-        if (keyCode === 102 || keyCode === 77) { // m key
+        if (keyCode === 102 || keyCode === 77) { // m key mute
             t.targetAudio.toggleMute();
         }
         
-        if (keyCode === 112 || keyCode === 80) { // p key
+        if (keyCode === 112 || keyCode === 80) { // p key pause
             t.targetSim.togglePause();
             t.targetAudio.toggleMute();
         }

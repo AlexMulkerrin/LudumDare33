@@ -9,6 +9,8 @@ function SoundSystem() {
     this.track = 0;
     this.currentTrack;
     this.loadMusic();
+    this.playMusic();
+    this.toggleMute();
     
     this.sound = [];
     this.loadSound();    
@@ -81,6 +83,15 @@ SoundSystem.prototype.loadSound = function() {
     
     this.sound[15] = new Audio("Assets/Sounds/Robot/Explosion.wav");
     this.sound[16] = new Audio("Assets/Sounds/Robot/Laser.wav");
+    
+    this.sound[15] = new Audio("Assets/Sounds/Robot/Explosion.wav");
+    this.sound[16] = new Audio("Assets/Sounds/Robot/Laser.wav");
+    
+    this.sound[17] = new Audio("Assets/Music/Defeat.wav");
+    this.sound[18] = new Audio("Assets/Music/Victory.wav");
+    
+    
+    
 };
 
 SoundSystem.prototype.playSound = function(id) {
