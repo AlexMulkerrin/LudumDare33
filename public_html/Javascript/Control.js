@@ -28,8 +28,10 @@ function Control(canvasName, simulation) {
     this.targetCanvas.onselectstart= function(event) {return false;};
     
     // KEYBOARD CONTROLS using unicode keycodes
-    document.onkeypress = function(event) {
-        var keyCode = event.keyCode || window.event.keyCode;
+    document.onkeydown = function(event) {
+        if (event===null) keyCode = window.event.keyCode;
+	else keyCode = event.keyCode;
+        //var keyCode = event.keyCode || window.event.keyCode;
         if (keyCode === 104) { // h key
             t.targetSim.toggleInterface();
         }
