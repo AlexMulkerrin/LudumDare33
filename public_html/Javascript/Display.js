@@ -27,7 +27,7 @@ function Display(canvasName, simulation, player) {
         this.tileSet[i].onload = function () {
             t.loaded++;
             if(t.loaded===t.tileSet.length) {
-                t.targetSim.togglePause();
+                //t.targetSim.togglePause();
                 t.targetSim.gameState="playing";
                 t.makeBackground(t.background);
             }

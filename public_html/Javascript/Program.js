@@ -7,7 +7,7 @@ function loadProgram() {
     
     setInterval(function(){ program.update();},program.refreshDelay);
     //program.audio.playMusic();
-    program.simulation.togglePause();
+    //program.simulation.togglePause();
 }
 // OBJECT CLASS
 function Program(canvasName) {
