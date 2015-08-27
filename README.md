@@ -9,7 +9,7 @@ Bug themed RTS where you fight against robots.
 * Iain Mulkerrin Sounds
 * David Devereux Music
 
-##Code base map
+##Codebase map
 Source code can be found in the folder 'public_html' with file index.html being the root of the embedded webpage.
 All Javscript is contained in one folder split into separate class files for different modules of the program:
 * Program.js  Is the function called on page load and handles setting up and launching the game
